@@ -1,4 +1,4 @@
-###### DISCLAIMER:
+##### DISCLAIMER:
 
 I'm not a programmer, software developer, engineer, or any other fancy title that sounds like I speak fluent binary. I am not a network engineer. I do not even have any sort of IT or tech job. I am simply a hobbyist who dabbles in code to fix relatively minor issues and annoyances. Most of the time, I throw what little I know about "good" coding standards out the window and beat my head against the wall just trying to get the thing to work. To highlight some of my key skills:
 
