@@ -19,7 +19,7 @@ I'm not a programmer, software developer, engineer, or any other fancy title tha
 Self-deprecating jokes aside, I know I do not write the cleanest, most efficient, or safest code. Sometimes it's because the task doesn't require it and sometimes it's because I don't know how. I am always interested in learning, though. So if you happen to come across this and want to learn me some education or you simply want to use something that I've mangled together, feel free to refactor some of my code.
 
 Thank you,  
-ScottMonster
+ScottMonster <br>
 As is. Run at your own risk. I'm not accountable for your poor judgment. You've been warned.
 
 # misc
