@@ -10,7 +10,7 @@ I'm not a programmer, software developer, engineer, or any other fancy title tha
 
 - **Dependency Management**: `rm -rf node_modules`
 
-- **Recursion**: You can recursively drag these balls on your face.
+- **Recursion**: You can recursively drag these balls across your face.
 
 - **Version Control Conflicts**: Please see the "Dependency Management" section and apply similar techniques.
 
