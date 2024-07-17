@@ -23,5 +23,15 @@ ScottMonster <br>
 As is. Run at your own risk. I'm not accountable for your poor judgment. You've been warned.
 
 # misc
-
 Just a collection of scripts that you probably shouldn't use.
+
+
+
+#### Graffiti Docs
+Just some graffiti documentaries that I'm saving here for a buddy.
+
+[Can't Be Stopped | Graffiti Crew | Full Documentary](https://www.youtube.com/watch?v=HxoUg-kWerI)
+
+[1UP - ONE WEEK WITH 1UP - THE SHORT FILM](https://www.youtube.com/watch?v=i9V18HUoZcc)
+
+[Miami‘s Graffiti Style Gods](https://www.youtube.com/watch?v=RUV1xOvMwsI)
