@@ -1,0 +1,99 @@
+#!/bin/bash
+
+
+function get_password() {
+    local password1 password2
+
+    # Prompt for the password
+    read -rsp "Enter your password for $1: " password1
+    echo 
+
+    # Prompt to confirm the password
+    read -rsp "Enter your password for $1 again: " password2
+    echo 
+
+    # Check if the passwords match
+    if [ "$password1" = "$password2" ]; then
+        echo "$password1"  # Return the password
+    else
+        echo "Passwords do not match. Please try again."
+        get_password "$1"  # Call the function recursively to retry
+    fi
+}
+
+tang_server="ip.ip.ip.ip:port"
+
+if [[ $tang_server == "ip.ip.ip.ip:port" ]]; then
+  echo "You need to set the tang server"
+  exit 1
+fi
+
+
+####################################################################################
+# Network Bound Disk Encryption (NBDE) via tang and clevis
+####################################################################################
+root_disk=false
+root_passwd=""
+pre_network_bound_disk_encryption() {
+  # add the packages to install
+  # add_package "clevis clevis-luks clevis-initramfs clevis-systemd"
+  apt install clevis clevis-luks clevis-initramfs clevis-systemd -y
+  local confirm=""
+  echo "Config - Network Bound Disk Encryption (NBDE):"
+  echo "The default tang server is $tang_server"
+  read -rp "I haven't added the ability to change the tang server if you want to change it exit (ctrl + c) now and do it manually " confirm
+  # read -rp "Do you want to accept this? (y/n) Default is yes: " confirm
+  # confirm=${confirm:-y}
+  # case $confirm in
+  # [Yy] | [Yy][Ee][Ss] | "")
+  #   # Continue with the script
+  #   ;;
+  # *)
+
+  #   ;;
+  # esac
+
+  # lsblk | grep -B 2 "$root_name" | head -1 | grep -Po '(?<=└─)\S*'
+
+  # lsblk | grep -B 2 "$root_name" | head -1 | grep -Po '(?<=└─)\S*'
+  # get root name. this makes getting the root partition from lsblk easier
+  root_name=$(basename <<<echo "$(df -h / | awk 'NR==2 {print $1}')")
+
+  # get the name of the disk from lsblk
+  root_partition=$(lsblk | grep -B 2 "$root_name" | head -1 | grep -Po '(?<=─)\S*')
+
+  # set the name
+  disk="/dev/$root_partition"
+
+  # if it doesn't exists try to get UUID from crpyttab
+  if [ ! -e "$disk" ]; then
+    echo "we did not find the root disk unable to setup clevis"
+    echo "we need better detection of the root disk"
+    return
+  else
+
+    # we should probably check if it is actually encrypted
+    echo "i do believe we found the root partition"
+    root_disk="$disk"
+    root_passwd=$(get_password "$root_disk")
+  fi
+}
+network_bound_disk_encryption() {
+  if [[ ! -e $root_disk ]]; then
+    echo "root disk: $root_disk doens't exist. can't setup clevis"
+    return
+
+  fi
+
+
+
+  # -k - : Non-interactively read LUKS password from standard input
+  # echo -n "$root_passwd" | clevis luks bind -y -d "$root_disk" tang '{"url": "http://'"$tang_server"'"}' -k -
+  #  couldn't get the above to work but it works with a here file
+  clevis luks bind -y -d "$root_disk" tang '{"url": "http://'"$tang_server"'"}' -k <<< "$root_passwd"
+
+  update-initramfs -u -k 'all'
+}
+
+pre_network_bound_disk_encryption
+network_bound_disk_encryption

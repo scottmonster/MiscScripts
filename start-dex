@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+
+scrcpy --tcpip=10.1.10.150:10150 --max-size=1920 --display-id 2 --window-title 'DexOnLinux' --turn-screen-off --stay-awake --forward-all-clicks
+
+
+
+
+
+
+
+
+

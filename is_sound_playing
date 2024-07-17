@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+
+
+# Get the list of currently playing streams
+# streams=$( list sink-inputs short)
+streams=$(pactl list sink-inputs | grep 'Corked: no')
+
+
+
+# Check if the streams variable is non-empty
+if [ -n "$streams" ]; then
+  # echo "sound is playing"
+  exit 0
+else
+  exit 1
+fi
+
+
+
+
+
+

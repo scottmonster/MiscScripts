@@ -1,0 +1,114 @@
+#!/bin/bash
+
+
+# todo: actually test this... Or pull similar from somewhere else that is more reliable
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -i)
+      input_file="$2"
+      shift 2
+      ;;
+    -o)
+      output_dir="$2"
+      shift 2
+      ;;
+    *)
+      if [ -z "$input_file" ]; then
+        input_file="$1"
+      elif [ -z "$output_dir" ]; then
+        output_dir="$1"
+      else
+        echo "Unknown argument: $1"
+        exit 1
+      fi
+      shift
+      ;;
+  esac
+done
+
+if [ -z "$input_file" ]; then
+  echo "Input file not specified."
+  exit 1
+fi
+
+if [ -z "$output_dir" ]; then
+  output_dir=$(dirname "$input_file")
+fi
+
+# Determine the file format
+file_ext="${input_file##*.}"
+
+# Extract based on file format
+case $file_ext in
+  7z)
+    7z x "$input_file" -o"$output_dir"
+    ;;
+  zip)
+    unzip "$input_file" -d "$output_dir"
+    ;;
+  tar)
+    tar xf "$input_file" -C "$output_dir"
+    ;;
+  xz)
+    xz -dk "$input_file"
+    ;;
+  rar)
+    unrar x "$input_file" "$output_dir"
+    ;;
+  gz)
+    tar xzf "$input_file" -C "$output_dir"
+    ;;
+  bz2)
+    tar xjf "$input_file" -C "$output_dir"
+    ;;
+  lz)
+    lzip -d -c "$input_file" | tar xf - -C "$output_dir"
+    ;;
+  lzma)
+    tar --lzma -xf "$input_file" -C "$output_dir"
+    ;;
+  *)
+    echo "Unsupported file format: $file_ext"
+    exit 1
+    ;;
+esac
+
+
+
+
+exit
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

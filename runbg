@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+
+
+if [[ -z $1 ]]; then
+  echo "runbg was not provided anything to run"
+  exit
+else
+  command="$1"
+  shift
+  if command -v "$command" >/dev/null 2>&1; then
+    # tmplog "running $command "
+    nohup "$command" "$@" > /dev/null 2>&1 &
+  else
+    echo "runbg could not find command: $command"
+  fi
+fi
+exit
+
+
+

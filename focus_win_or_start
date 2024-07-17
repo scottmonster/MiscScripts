@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+
+
+# this script will in an uncase sensitive way do the following
+# 1. check if the program is already running in the current workspace
+# 2. if it is, it will focus on it
+# 3. if it is not, it will check if the program is in $bring_these_from_other_workspaces
+# 4. if it is, it will check if the program is running in another workspace
+# 5. if it is, it will move it to the current workspace and focus on it
+# 6. if it is not, it will start the program
+
+# Names of programs whose windows should be brought in from other workspaces
+bring_these_from_other_workspaces="obsidian"
+
+# Ensure dependencies are installed
+if ! command -v wmctrl &> /dev/null || ! command -v xdotool &> /dev/null; then
+    echo "This script requires wmctrl and xdotool to be installed."
+    exit 1
+fi
+
+# Program to focus or launch
+target_program="${1:-''}"
+
+
+# make sure they are both lowercase
+bring_these_from_other_workspaces=${bring_these_from_other_workspaces,,}
+target_program=${target_program,,}
+
+
+# Get the ID of the current workspace
+current_workspace=$(xdotool get_desktop)
+
+
+target_window=$(wmctrl -lx | awk -v ws="$current_workspace" -v tp="$target_program" 'BEGIN{IGNORECASE=1} $2 == ws && $3 ~ tp { print $1; exit }')
+
+
+
+# If a target window exists in the current workspace, activate it
+if [[ -n $target_window ]]; then
+    xdotool windowactivate "$target_window"
+  
+    exit
+fi
+
+
+# Check if the target program should be brought from other workspaces
+if [[ $bring_these_from_other_workspaces =~ $target_program ]]; then
+  
+    # Try to find a window of the target program in a different workspace
+    # other_workspace_window=$(wmctrl -lx | awk -v tp="$target_program" '$3 ~ tp { print $1; exit }')
+    other_workspace_window=$(wmctrl -lx | awk -v tp="$target_program" 'BEGIN{IGNORECASE=1} $3 ~ tp { print $1; exit }')
+  
+    # If found, move it to the current workspace and activate it
+    if [[ -n $other_workspace_window ]]; then
+      target_window=$other_workspace_window
+    
+      wmctrl -ir $other_workspace_window -t $current_workspace
+      end_time=$((SECONDS + 2))  # Set end time 2 seconds from now
+      while [[ "$(xdotool get_desktop_for_window $target_window)" -ne "$current_workspace" ]]; do
+          if [[ "$SECONDS" -ge "$end_time" ]]; then
+            
+              exit 1  # Exit if the window does not move in time
+          fi
+          sleep 0.1  # Short sleep to prevent high CPU usage
+      done
+      xdotool windowactivate $other_workspace_window
+      exit
+    fi
+fi
+
+# If the program is executable (in PATH), start it in background
+if command -v "$target_program" &> /dev/null; then
+    nohup "$target_program" &> /dev/null &
+else
+    echo "Cannot switch to $target_program because it doesn't match any window and cannot start it because it's not in PATH."
+fi
+
+
+exit
+
+
+
+

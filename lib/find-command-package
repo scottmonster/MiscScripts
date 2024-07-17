@@ -1,0 +1,21 @@
+#!/bin/bash
+
+find-command-package() {
+  if [ "$#" -ne 1 ]; then
+    echo "Usage: find-command-package <command>"
+    return 1
+  fi
+
+  cmd=$(which "$1")
+
+  if [[ -z "$cmd" ]]; then
+    echo "cmd is empty"
+    echo "$1 isn't installed. you need to fix apt-file so we can do sudo apt-file search $1"
+    #
+  else
+    dpkg-query -S "$cmd"
+  fi
+
+}
+
+find-command-package "$1"

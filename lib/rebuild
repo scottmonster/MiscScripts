@@ -1,0 +1,136 @@
+#!/bin/bash
+
+#Check if the script is running as root
+if [ "$EUID" -ne 0 ]; then
+  echo "This script must be run as root."
+  exit 1
+fi
+
+# Check if an argument is provided
+if [ "$#" -eq 0 ]; then
+    echo "Error: Missing argument. Please provide the required argument."
+    exit 1
+fi
+
+# Check if the argument ends with ".img"
+if [[ ! "$1" =~ \.img$ ]]; then
+    echo "Error: is not an .img"
+    exit 1
+fi
+
+# Check if the argument is a valid file path
+if [ ! -e "$1" ] || [ ! -f "$1" ]; then
+    echo "Error: $1 doesn't exist or is not a file path"
+    exit 1
+fi
+
+
+
+password1=""
+password2=""
+prompt="Please enter an existing LUKS password for device"
+while true; do
+  read -s -p "$prompt: " password1
+  echo
+  read -s -p "$prompt (again): " password2
+  echo
+  [ "$password1" = "$password2" ] && break
+  echo "Passwords did not match. Please try again."
+done
+password="$password1"
+
+# Get the absolute path of the file
+absolute_path=$(realpath "$1")
+
+apt update
+apt install kpartx cryptsetup-bin qemu-user-static rsync -y
+
+
+orig_img="$absolute_path"
+
+# Get the directory of the file
+directory=$(dirname "$file_path")
+
+wd="$directory/enc"
+base_img="$wd/base.img"
+target_img="$wd/target.img"
+
+# make a working directory
+mkdir "$wd"
+# cd "$wd"
+
+# make two copies of the image
+cp "$orig_img" "$base_img"
+cp "$orig_img" "$target_img"
+
+#  englarge the target image
+dd if=/dev/zero bs=1G count=1 >> "$target_img"
+parted "$target_img" resizepart 2 100%
+
+# use img as device
+kpartx -ar "$base_img"
+kpartx -a "$target_img"
+
+# mountthe base
+mkdir -p /mnt/original/
+mount /dev/mapper/loop0p2 /mnt/original/
+
+# encrypt partition 2 of the target img
+echo -n "$password" | cryptsetup luksFormat -c xchacha20,aes-adiantum-plain64 --pbkdf-memory 512000 --pbkdf-parallel=1 /dev/mapper/loop1p2
+
+# open it, make ext4 file system, and mount it 
+echo -n "$password" | cryptsetup open /dev/mapper/loop1p2 crypted
+mkfs.ext4 /dev/mapper/crypted
+mkdir -p /mnt/chroot/
+mount /dev/mapper/crypted /mnt/chroot/
+
+# copy everything from the original img
+rsync --archive --hard-links --acls --xattrs --one-file-system --numeric-ids --info="progress2" /mnt/original/* /mnt/chroot/
+
+# setup to chroot
+mkdir -p /mnt/chroot/boot/
+mount /dev/mapper/loop1p1 /mnt/chroot/boot/
+mount -t proc none /mnt/chroot/proc/
+mount -t sysfs none /mnt/chroot/sys/
+mount -o bind /dev /mnt/chroot/dev/
+mount -o bind /dev/pts /mnt/chroot/dev/pts/
+# begin chroot
+LANG=C chroot /mnt/chroot/ /bin/bash
+
+apt update
+apt install busybox cryptsetup dropbear-initramfs patch curl jq findutils -y
+
+
+
+
+
+sync
+history -c && exit
+umount /mnt/chroot/boot
+umount /mnt/chroot/sys
+umount /mnt/chroot/proc
+umount /mnt/chroot/dev/pts
+umount /mnt/chroot/dev
+umount /mnt/chroot
+cryptsetup close crypted
+umount /mnt/original
+rm -d /mnt/chroot
+rm -d /mnt/original
+kpartx -d "$base_img"
+kpartx -d "$target_img"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
